@@ -29,7 +29,7 @@ def generate_new_request(arrival_rate: float) -> Iterator[Request]:
         recursive_requests_time = np.random.normal(80, 15)
 
         is_in_cache = random.randint(1, 10) <= 8  # there's 80% chance of cache hit
-        is_in_disk = random.randint(1, 10) <= 1  # there's a 90% chance of disk miss
+        is_in_disk = random.randint(1, 10) <= 1  # there's a 10% chance of disk hit
         # TODO: explain the disk probability
 
         # always look for result in cache first
