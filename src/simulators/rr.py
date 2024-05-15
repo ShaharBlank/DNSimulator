@@ -14,16 +14,20 @@ TIME_QUANTUM = 55.0  # ms [10, 100]
 def simulate(
         max_queue_size: int,
         arrival_rate: float,
+        time_quantum: float,
         simulation_time: float = SIMULATION_TIME
 ) -> List[Request]:
     requests_generator = generate_new_request(arrival_rate)
-    results = _run_simulator(max_queue_size, requests_generator, simulation_time)
+    results = _run_simulator(max_queue_size, requests_generator, time_quantum, simulation_time)
     # logger.info('RR Simulation Done')
     return results
 
 
-def _run_simulator(max_queue_size: int, requests_generator: Iterator[Request], simulation_time: float) \
-        -> List[Request]:
+def _run_simulator(
+        max_queue_size: int,
+        requests_generator: Iterator[Request],
+        time_quantum: float,
+        simulation_time: float) -> List[Request]:
     q = queue.Queue(max_queue_size)
     all_requests = []
 
@@ -64,7 +68,7 @@ def _run_simulator(max_queue_size: int, requests_generator: Iterator[Request], s
             if not has_request_starved_at_queue(current_request, current_time):
                 # if the request waited for too long at the queue - just "throw" that request
                 # otherwise - process it
-                current_time += _handle_request(current_request, current_time)
+                current_time += _handle_request(current_request, current_time, time_quantum)
 
         else:  # no incoming requests - server is "at rest"
             # logger.debug('Resting...')
@@ -72,12 +76,12 @@ def _run_simulator(max_queue_size: int, requests_generator: Iterator[Request], s
     return all_requests
 
 
-def _handle_request(request: Request, current_time: int) -> float:
+def _handle_request(request: Request, current_time: int, time_quantum: float) -> float:
     if not request.start_processing_time:  # if not already was in queue
         request.start_processing_time = current_time
         request.processing_time_leftover = request.processing_time
 
-    burst_time = min(TIME_QUANTUM, request.processing_time_leftover)
+    burst_time = min(time_quantum, request.processing_time_leftover)
     request.processing_time_leftover -= burst_time
     current_time += burst_time
 

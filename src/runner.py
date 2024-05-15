@@ -7,7 +7,7 @@ from src.simulators import rr, fifo, lifo
 
 
 def _run_simulation(simulator: Callable[[int, float], List[Request]]) -> None:
-    algorithm_name = str(simulator.__module__).split('.')[-1].upper()
+    algorithm_name = str(simulator.__module__).split('.')[-1].upper()  # type: ignore
     print(f'{algorithm_name} Simulation:')
 
     for arrival_rate, max_queue_size in itertools.product(ARRIVAL_RATES, MAX_QUEUE_SIZES):
