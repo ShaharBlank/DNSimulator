@@ -8,8 +8,6 @@ from src.request_utils import generate_new_request, Request, has_request_starved
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
 
-TIME_QUANTUM = 55.0  # ms [10, 100]
-
 
 def simulate(
         max_queue_size: int,
@@ -33,6 +31,7 @@ def _run_simulator(
 
     current_time = 0
     incoming_request = next(requests_generator)  # First incoming request
+    all_requests.append(incoming_request)
     current_request: Optional[Request] = None
 
     while current_time < simulation_time:
@@ -42,14 +41,17 @@ def _run_simulator(
             try:
                 q.put(incoming_request, block=False)
                 incoming_request = next(requests_generator)
-                all_requests.append(incoming_request)
+                if incoming_request.arrival_time <= simulation_time:
+                    all_requests.append(incoming_request)
             except queue.Full:
                 # now the queue is full, so any of the other incoming request (up to the current time) is thrown
                 # logger.debug('Queue is full')
-                all_requests.append(incoming_request)
+                if incoming_request.arrival_time <= simulation_time:
+                    all_requests.append(incoming_request)
                 while incoming_request.arrival_time <= current_time:
                     incoming_request = next(requests_generator)
-                    all_requests.append(incoming_request)
+                    if incoming_request.arrival_time <= simulation_time:
+                        all_requests.append(incoming_request)
                 break
 
         if current_request and current_request.processing_time_leftover:

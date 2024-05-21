@@ -39,14 +39,17 @@ def _run_simulator(
             try:
                 q.put(incoming_request, block=False)
                 incoming_request = next(requests_generator)
-                all_requests.append(incoming_request)
+                if incoming_request.arrival_time <= simulation_time:
+                    all_requests.append(incoming_request)
             except queue.Full:
                 # now the queue is full, so any of the other incoming request (up to the current time) is thrown
                 # logger.debug('Queue is full')
-                all_requests.append(incoming_request)
+                if incoming_request.arrival_time <= simulation_time:
+                    all_requests.append(incoming_request)
                 while incoming_request.arrival_time <= current_time:
                     incoming_request = next(requests_generator)
-                    all_requests.append(incoming_request)
+                    if incoming_request.arrival_time <= simulation_time:
+                        all_requests.append(incoming_request)
                 break
 
         if not q.empty():  # There are requests waiting to be handled
