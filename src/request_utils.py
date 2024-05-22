@@ -4,12 +4,13 @@ from typing import Optional, Iterator
 import numpy as np
 from pydantic import BaseModel
 
-from consts import DEADLINE
+from src.consts import DEADLINE
 
 
 class Request(BaseModel):
     arrival_time: float
     processing_time: float
+
     deadline: float = DEADLINE
     start_processing_time: Optional[float] = None
     end_processing_time: Optional[float] = None
@@ -28,9 +29,8 @@ def generate_new_request(arrival_rate: float) -> Iterator[Request]:
         # NETWORK_T~N(80,15) 20<=t=<140
         recursive_requests_time = np.random.normal(80, 15)
 
-        is_in_cache = random.randint(1, 10) <= 8  # there's 80% chance of cache hit
-        is_in_disk = random.randint(1, 10) <= 1  # there's a 10% chance of disk hit
-        # TODO: explain the disk probability
+        is_in_cache = random.randint(1, 10) <= 7  # there's 70% chance of cache hit
+        is_in_disk = random.randint(1, 10) <= 8  # there's 80% chance of disk hit, given that the request is not cached
 
         # always look for result in cache first
         processing_time = cache_search_time
@@ -39,7 +39,7 @@ def generate_new_request(arrival_rate: float) -> Iterator[Request]:
 
         yield Request(
             arrival_time=arrival_time,
-            processing_time=processing_time
+            processing_time=processing_time,
         )
 
         # Poisson's arrival times differences between 2 consecutive requests is actually X~Exp(1/𝜆)
