@@ -8,6 +8,7 @@ from src.consts import MAX_QUEUE_SIZES, ARRIVAL_RATES
 from src.request_utils import Request
 from src.simulators import rr, fifo, lifo
 
+
 def _run_fifo_simulation() -> Dict[Tuple[float, int], List[Request]]:
     return {
         (arrival_rate, max_queue_size): fifo.simulate(max_queue_size, arrival_rate)
