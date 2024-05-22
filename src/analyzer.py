@@ -3,7 +3,7 @@ from typing import List, Dict, Tuple
 
 import matplotlib.pyplot as plt
 
-from src.request_utils import Request
+from src.request_utils import Request, State
 
 
 def success_ratio(all_requests: List[Request]) -> float:
@@ -11,13 +11,13 @@ def success_ratio(all_requests: List[Request]) -> float:
     total_requests = len(all_requests)
     if total_requests == 0:
         return 0
-    successful_requests = sum(1 for req in all_requests if req.is_completed)
+    successful_requests = sum(1 for req in all_requests if req.finish_state == State.FINISHED_SUCCESSFULLY)
     return successful_requests / total_requests
 
 
 def average_processing_time(all_requests: List[Request]) -> float:
     """Calculate the average processing time of completed requests."""
-    completed_requests = [req for req in all_requests if req.is_completed]
+    completed_requests = [req for req in all_requests if req.finish_state == State.FINISHED_SUCCESSFULLY]
     if not completed_requests:
         return 0
     total_time = sum(req.end_processing_time - req.start_processing_time for req in completed_requests)

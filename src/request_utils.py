@@ -1,10 +1,18 @@
 import random
+from enum import Enum
 from typing import Optional, Iterator
 
 import numpy as np
 from pydantic import BaseModel
 
 from src.consts import DEADLINE
+
+
+class State(str, Enum):
+    FINISHED_SUCCESSFULLY = 1
+    STARVED_AT_QUEUE = 2
+    COULD_NOT_GET_INTO_QUEUE = 3
+    FINISHED_AFTER_DEADLINE = 4
 
 
 class Request(BaseModel):
@@ -14,7 +22,7 @@ class Request(BaseModel):
     deadline: float = DEADLINE
     start_processing_time: Optional[float] = None
     end_processing_time: Optional[float] = None
-    is_completed: bool = False
+    finish_state: Optional[State] = None
 
     processing_time_leftover: Optional[float] = None  # in use only for RR
 
