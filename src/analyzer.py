@@ -1,4 +1,3 @@
-from collections import defaultdict
 from typing import List, Dict, Tuple
 
 import matplotlib.pyplot as plt
@@ -6,98 +5,95 @@ import matplotlib.pyplot as plt
 from src.request_utils import Request, State
 
 
-def success_ratio(all_requests: List[Request]) -> float:
-    """Calculate the success ratio of requests."""
+def success_percent(all_requests: List[Request]) -> float:
+    """Calculate the success percent of requests."""
     total_requests = len(all_requests)
     if total_requests == 0:
         return 0
     successful_requests = sum(1 for req in all_requests if req.finish_state == State.FINISHED_SUCCESSFULLY)
-    return successful_requests / total_requests
+    return successful_requests / total_requests * 100
 
 
-def average_processing_time(all_requests: List[Request]) -> float:
-    """Calculate the average processing time of completed requests."""
-    completed_requests = [req for req in all_requests if req.finish_state == State.FINISHED_SUCCESSFULLY]
-    if not completed_requests:
-        return 0
-    total_time = sum(req.end_processing_time - req.start_processing_time for req in completed_requests)
-    return total_time / len(completed_requests)
-
-
-def plot_success_ratio(simulations: Dict[Tuple[float, int], List[Request]], queue_mechanism: str):
-    """Plot the success ratio for varying parameters."""
-    x_labels = []
-    ratios = []
-
+def plot_success_percent(
+        simulations: Dict[Tuple[float, int], List[Request]],
+        queue_mechanism: str,
+        time_quantum: int = None
+) -> None:
+    """Plot the success percent for varying parameters."""
+    x_labels, percents = [], []
     for (arrival_rate, queue_size), requests in simulations.items():
-        ratio = success_ratio(requests)
+        percent = success_percent(requests)
         x_labels.append(f"AR: {arrival_rate}, QS: {queue_size}")
-        ratios.append(ratio)
+        percents.append(percent)
 
-    plt.figure(figsize=(14, 7))
-    plt.bar(x_labels, ratios)
-    plt.ylim(0, 1)
-    plt.title(f'Success Ratio for {queue_mechanism}')
+    rr_title = f'TQ={time_quantum}' if time_quantum else ''
+
+    plt.figure(figsize=(8, 6))
+    plt.bar(x_labels, percents)
+    plt.ylim(0, 100)
+    plt.title(f'Success Percent for {queue_mechanism} {rr_title}')
     plt.xlabel('Parameters (Arrival Rate, Queue Size)')
-    plt.ylabel('Success Ratio')
+    plt.ylabel('Success Percent')
     plt.xticks(rotation=45, ha='right')
     plt.tight_layout()
     plt.show()
 
 
-def plot_average_processing_time(simulations: Dict[Tuple[float, int], List[Request]], queue_mechanism: str):
-    """Plot the average processing time for varying parameters."""
-    x_labels = []
-    avg_times = []
+def plot_success_percent_3d(
+        simulations: Dict[Tuple[float, int], List[Request]],
+        queue_mechanism: str,
+        time_quantum: int = None
+):
+    """Plot the success percent for varying parameters in 3D."""
+    arrival_rates, queue_sizes, success_percents = [], [], []
 
     for (arrival_rate, queue_size), requests in simulations.items():
-        avg_time = average_processing_time(requests)
-        x_labels.append(f"AR: {arrival_rate}, QS: {queue_size}")
-        avg_times.append(avg_time)
+        arrival_rates.append(arrival_rate)
+        queue_sizes.append(queue_size)
+        success_percents.append(success_percent(requests))
 
-    plt.figure(figsize=(14, 7))
-    plt.bar(x_labels, avg_times, color='orange')
-    plt.title(f'Average Processing Time for {queue_mechanism}')
-    plt.xlabel('Parameters (Arrival Rate, Queue Size)')
-    plt.ylabel('Average Processing Time (s)')
-    plt.xticks(rotation=45, ha='right')
-    plt.tight_layout()
-    plt.show()
+    fig = plt.figure(figsize=(8, 6))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(arrival_rates, queue_sizes, success_percents, c='r', marker='o')
 
+    # Adding lines with different colors
+    unique_arrival_rates = sorted(set(arrival_rates))
+    color_map = plt.get_cmap('viridis', len(unique_arrival_rates))
 
-def requests_over_time(all_requests: List[Request]) -> Dict[int, int]:
-    """Count the number of requests over time."""
-    time_buckets = defaultdict(int)
-    for req in all_requests:
-        time_buckets[int(req.arrival_time)] += 1
-    return time_buckets
+    for i, arrival_rate in enumerate(unique_arrival_rates):
+        indices = [j for j, ar in enumerate(arrival_rates) if ar == arrival_rate]
+        xs = [arrival_rates[j] for j in indices]
+        ys = [queue_sizes[j] for j in indices]
+        zs = [success_percents[j] for j in indices]
+        ax.plot(xs, ys, zs, color=color_map(i))
 
+    rr_title = f'TQ={time_quantum}' if time_quantum else ''
 
-def plot_requests_over_time(simulations: Dict[Tuple[float, int], List[Request]], queue_mechanism: str):
-    """Plot the number of requests over time for varying parameters."""
-    plt.figure(figsize=(10, 6))
+    ax.set_xlabel('Arrival Rate')
+    ax.set_ylabel('Queue Size')
+    ax.set_zlabel('Success Percent')
+    ax.set_title(f'Success Percent for {queue_mechanism} {rr_title}')
 
-    for (arrival_rate, queue_size), requests in simulations.items():
-        time_buckets = requests_over_time(requests)
-        times = sorted(time_buckets.keys())
-        request_counts = [time_buckets[time] for time in times]
-        label = f"AR: {arrival_rate}, QS: {queue_size}"
-        plt.plot(times, request_counts, marker='o', label=label)
-
-    plt.title(f'Number of Requests Over Time for {queue_mechanism}')
-    plt.xlabel('Time')
-    plt.ylabel('Number of Requests')
-    plt.legend()
     plt.show()
 
 
 def analyze_simulations(simulations: Dict[Tuple[float, int], List[Request]], queue_mechanism: str):
     """Perform a full analysis of the simulations."""
-    # Plot success ratio
-    plot_success_ratio(simulations, queue_mechanism)
+    # Plot success percent
+    plot_success_percent(simulations, queue_mechanism)
 
-    # Plot average processing time
-    plot_average_processing_time(simulations, queue_mechanism)
+    # Plot success percent in 3D
+    plot_success_percent_3d(simulations, queue_mechanism)
 
-    # Plot requests over time
-    plot_requests_over_time(simulations, queue_mechanism)
+
+def analyze_simulations_rr(
+        simulations: Dict[Tuple[float, int], List[Request]],
+        time_quantum: int,
+        queue_mechanism: str
+):
+    """Perform a full analysis of the simulations."""
+    # Plot success percent
+    plot_success_percent(simulations, queue_mechanism, time_quantum)
+
+    # Plot success percent in 3D
+    plot_success_percent_3d(simulations, queue_mechanism, time_quantum)

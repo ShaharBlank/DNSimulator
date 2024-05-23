@@ -62,6 +62,8 @@ def _run_simulator(max_queue_size: int, requests_generator: Iterator[Request], s
             else:
                 # if the request waited for too long at the queue - just "throw" that request
                 current_request.finish_state = State.STARVED_AT_QUEUE
+                current_time += IDLE_TIME  # move the "clock"
+
         else:  # no incoming requests - server is "at rest"
             # logger.debug('Resting...')
             current_time += IDLE_TIME  # move the "clock"

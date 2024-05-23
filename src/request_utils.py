@@ -38,7 +38,7 @@ def generate_new_request(arrival_rate: float) -> Iterator[Request]:
         recursive_requests_time = np.random.normal(80, 15)
 
         is_in_cache = random.randint(1, 10) <= 7  # there's 70% chance of cache hit
-        is_in_disk = random.randint(1, 10) <= 8  # there's 80% chance of disk hit, given that the request is not cached
+        is_in_disk = random.randint(1, 10) <= 3  # there's 80% chance of disk hit, given that the request is not cached
 
         # always look for result in cache first
         processing_time = cache_search_time
